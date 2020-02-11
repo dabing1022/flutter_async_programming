@@ -4,6 +4,16 @@ import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
+class CrossIsolatesMessage<T> {
+  final SendPort sender;
+  final T content;
+
+  CrossIsolatesMessage({
+    @required this.sender,
+    this.content,
+  });
+}
+
 String stringInMainIsolate;
 void runIsolateDemo() {
   stringInMainIsolate = "HelloFlutter!";
@@ -12,10 +22,14 @@ void runIsolateDemo() {
   Isolate.spawn(entryPoint, receivePort.sendPort, debugName: "myNewIsolate");
 
   receivePort.listen((message) {
-    if (message is SendPort) {
-      message.send("Yes, let's go to swim!");
-    } else {
-      print("${Isolate.current.debugName} receive sub isolate message: $message");
+    SendPort sendPort = message.sender;
+    int questionId = message.content["questionId"];
+    String content = message.content["question"];
+    print("${Isolate.current.debugName} receive sub isolate message: $content");
+    if (questionId == 1) {
+      sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "Yes, let's go to swim!"));
+    } else if (questionId == 2) {
+      sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "No, I'll stay at home."));
     }
   });
 
@@ -41,11 +55,12 @@ void entryPoint(SendPort sendPort) {
   print("stringInMainIsolate: $stringInMainIsolate");
 
   ReceivePort receivePort = ReceivePort();
-  sendPort.send(receivePort.sendPort);
-  sendPort.send("go swimming?");
+  sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: {"questionId": 1, "question": "Go to swim?"}));
+  sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: {"questionId": 2, "question": "Go to play basketball?"}));
 
   receivePort.listen((message) {
-    print("${Isolate.current.debugName} receive main isolate message: $message");
+    String content = message.content;
+    print("${Isolate.current.debugName} receive main isolate message: $content");
   });
 }
 

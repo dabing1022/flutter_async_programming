@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -37,16 +39,13 @@ class MyHomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Future.delayed(Duration(seconds: 0), () {
-            print("print 0 from future delayed 1 seconds");
-          });
-
           Future.delayed(Duration(seconds: 2), () {
+            sleep(Duration(seconds: 10));
             print("print 2 from future delayed 2 seconds");
           });
 
-          Future.delayed(Duration(seconds: 6), () {
-            print("print 6 from future delayed 6 seconds");
+          Future.delayed(Duration(seconds: 1), () {
+            print("print 1 from future delayed 1 seconds");
           });
 
           final myFuture = http.get('https://www.baidu.com');
@@ -56,6 +55,14 @@ class MyHomePage extends StatelessWidget {
             } else {
               print('Something wrong happened: ${response.statusCode}');
             }
+          });
+
+          Future.microtask(() {
+            print("this is microtask, it will execute at high level");
+          });
+
+          Future.delayed(Duration(seconds: 0), () {
+            print("print 0 from future delayed 0 seconds");
           });
         },
         child: Icon(Icons.add),
