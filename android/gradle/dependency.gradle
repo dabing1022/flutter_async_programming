@@ -1,0 +1,111 @@
+
+/*
+ * 配置三方依赖文件
+ */
+if (rootProject.hasProperty('DEPENDENCY_FILE_URL') && null != DEPENDENCY_FILE_URL && !DEPENDENCY_FILE_URL.isEmpty()) {
+    if (DEPENDENCY_FILE_URL.contains('private_token')) {
+        applyFile('not_modify_dependency.gradle.hide', DEPENDENCY_FILE_URL)
+    } else {
+        applyFile('not_modify_dependency.gradle.hide', DEPENDENCY_FILE_URL + '?private_token=w5ryQye_zQVJzP2rCYkP')
+    }
+} else {
+    applyFile('not_modify_dependency.gradle.hide', 'http://gitlab.zhuanspirit.com/zz-android/zhuanzhuan/raw/master/gradle/config.gradle?private_token=w5ryQye_zQVJzP2rCYkP')
+}
+
+/**
+ * 该文件用于下载主项目中的一些配置信息，包括：编译API版本，三方依赖版本等；
+ */
+def downloadFile(String fileName, String url) {
+    if (null != url && !url.isEmpty()) {
+        println url
+        new File((rootProject.rootDir), 'gradle' + File.separator + fileName)
+                .withOutputStream { os->
+            new URL(url).withInputStream { ins->
+                os << ins
+            }
+        }
+    }
+}
+
+def applyFile(String fileName, String url) {
+    downloadFile(fileName, url)
+    apply from: rootProject.file('gradle' + File.separator + fileName)
+}
+
+String compareDepVersion(String dependency, String depVersion) {
+    if (null != dependency && null != depVersion) {
+        String[] tmp = dependency.split(":")
+        if (null != tmp && tmp.length == 3) {
+            String configVersion = parseDependencyVersionCode(tmp[2])
+            String inputVersion = parseDependencyVersionCode(depVersion)
+            if (inputVersion > configVersion) {
+                println(dependency)
+                return tmp[0] + ':' + tmp[1] + ':' + depVersion
+            }
+        }
+    }
+    return dependency
+}
+
+String libDep(String libName) {
+    return rootProject.ext.libDependencies[libName]
+}
+
+/**
+ * 返回依赖，并按需修改版本号
+ * @param depVersion 指定版本号，如果该值比主项目中的高，则优先使用该值
+ */
+String libDep(String libName, String depVersion) {
+    return compareDepVersion(rootProject.ext.libDependencies[libName], depVersion)
+}
+
+/**
+ * 解析依赖中的版本号，忽略 SNAPSHOT
+ */
+long parseDependencyVersionCode(String depVersion) {
+    if (null == depVersion || depVersion.isEmpty()) {
+        return 0L
+    }
+    String[] tmp = depVersion.split('-')
+    if (null == tmp) {
+        return 0L
+    }
+    String versionCode = tmp[0]
+    tmp = versionCode.split('\\.')
+    if (null == tmp) {
+        return 0L
+    }
+    long code = 0
+    for (int i = 0; i < tmp.length; i++) {
+        long multi = 1
+        for (int j = i; j < tmp.length - 1; j++) {
+            multi *= 1000
+        }
+        code += Long.valueOf(tmp[i]) * multi
+    }
+    return code
+}
+
+String moduleDep(String moduleName) {
+    return rootProject.ext.moduleDependencies[moduleName]
+}
+
+String moduleDep(String libName, String depVersion) {
+    return compareDepVersion(rootProject.ext.moduleDependencies[libName], depVersion)
+}
+
+String moduleApiDep(String moduleName) {
+    return rootProject.ext.moduleApiDependencies[moduleName]
+}
+
+String moduleApiDep(String libName, String depVersion) {
+    return compareDepVersion(rootProject.ext.moduleApiDependencies[libName], depVersion)
+}
+
+rootProject.ext {
+    libDep = this.&libDep
+    moduleDep = this.&moduleDep
+    moduleApiDep = this.&moduleApiDep
+    downloadFile = this.&downloadFile
+    applyFile = this.&applyFile
+}
