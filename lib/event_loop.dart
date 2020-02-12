@@ -39,15 +39,18 @@ class MyHomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          // future D
           Future.delayed(Duration(seconds: 2), () {
             sleep(Duration(seconds: 10));
             print("print 2 from future delayed 2 seconds");
           });
 
+          // future C
           Future.delayed(Duration(seconds: 1), () {
             print("print 1 from future delayed 1 seconds");
           });
 
+          // future B
           final myFuture = http.get('https://www.baidu.com');
           myFuture.then((response) {
             if (response.statusCode == 200) {
@@ -57,10 +60,17 @@ class MyHomePage extends StatelessWidget {
             }
           });
 
+          // microtask 1
           Future.microtask(() {
             print("this is microtask, it will execute at high level");
           });
 
+          // microtask 2
+          Future.microtask(() {
+            print("this is microtask2, it will execute at high level after microtask1");
+          });
+
+          // future A
           Future.delayed(Duration(seconds: 0), () {
             print("print 0 from future delayed 0 seconds");
           });

@@ -5,9 +5,8 @@ import 'package:flutter_async_programming/event_loop.dart';
 
 void main() {
 //  runDefaultDemo();
-//  runApp(MyApp());
-  runIsolateDemo();
+//  runIsolateDemo();
 //  runIsolateDemo2();
 //  runIsolateDemo3();
-//  runEventLoopDemo();
+  runEventLoopDemo();
 }

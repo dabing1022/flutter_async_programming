@@ -21,7 +21,34 @@ void runIsolateDemo() {
 
   Isolate.spawn(entryPoint, receivePort.sendPort, debugName: "myNewIsolate");
 
-  receivePort.listen((message) {
+//  receivePort.listen((message) {
+//    SendPort sendPort = message.sender;
+//    int questionId = message.content["questionId"];
+//    String content = message.content["question"];
+//    print("${Isolate.current.debugName} receive sub isolate message: $content");
+//    if (questionId == 1) {
+//      sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "Yes, let's go to swim!"));
+//    } else if (questionId == 2) {
+//      sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "No, I'll stay at home."));
+//    }
+//  });
+
+  Stream receiveStream = receivePort.asBroadcastStream();
+  receiveStream.listen((message) {
+    // logic 1
+    SendPort sendPort = message.sender;
+    int questionId = message.content["questionId"];
+    String content = message.content["question"];
+    print("${Isolate.current.debugName} receive sub isolate message: $content");
+    if (questionId == 1) {
+      sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "No!"));
+    } else if (questionId == 2) {
+      sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "Yes!"));
+    }
+  });
+
+  receiveStream.listen((message) {
+    // logic 2
     SendPort sendPort = message.sender;
     int questionId = message.content["questionId"];
     String content = message.content["question"];
@@ -32,23 +59,6 @@ void runIsolateDemo() {
       sendPort.send(CrossIsolatesMessage(sender: receivePort.sendPort, content: "No, I'll stay at home."));
     }
   });
-
-//  Stream receiveStream = receivePort.asBroadcastStream();
-//  receiveStream.listen((message) {
-//    if (message is SendPort) {
-//      message.send("1: Yes, let's go to swim!");
-//    } else {
-//      print("1: ${Isolate.current.debugName} isolate receive sub isolate message: $message");
-//    }
-//  });
-//
-//  receiveStream.listen((message) {
-//    if (message is SendPort) {
-//      message.send("2: Yes, let's go to swim!");
-//    } else {
-//      print("2: ${Isolate.current.debugName} isolate receive sub isolate message: $message");
-//    }
-//  });
 }
 
 void entryPoint(SendPort sendPort) {
